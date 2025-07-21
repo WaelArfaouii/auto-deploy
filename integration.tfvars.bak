@@ -1,0 +1,18 @@
+domain_name            = "scheme-management"
+domain_name_sm         = "talansm"
+env                    = "qa"
+cognito_user_pool_arn  = "arn:aws:cognito-idp:eu-west-2:619403130511:userpool/eu-west-2_0CgYbCVhE"
+certificate_arn        = "arn:aws:acm:eu-west-2:619403130511:certificate/457d53eb-f2f5-484f-b546-1b8ad90b368a"
+vpc_link_id            = "d3y1xp"
+hosted_zone_count      = 0
+frontend_alb_domain = "qa-frontend-alb-1105327965.eu-west-2.elb.amazonaws.com"
+frontend_alb_zone_id = "ZHURV8PSTC4K8"
+api_gateway_deployments = {
+  hnes = {
+    deployment_name = "hnes"
+    cognito_user_pool_arn = "arn:aws:cognito-idp:eu-west-2:619403130511:userpool/eu-west-2_eHl0iGXkp"
+  }
+}
+frontend_subdomains = {
+  hnes = true
+}

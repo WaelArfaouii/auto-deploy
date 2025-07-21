@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-{{DEPLOY_NAME}}
+  namespace: qa-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-{{DEPLOY_NAME}}
+  template:
+    metadata:
+      labels:
+        app: backend-{{DEPLOY_NAME}}
+    spec:
+      containers:
+        - name: backend
+          image: 619403130511.dkr.ecr.eu-west-2.amazonaws.com/scheme-management-backend-qa:{{IMAGE_TAG}}
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: backend-config-{{DEPLOY_NAME}}
+            - secretRef:
+                name: combined-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"

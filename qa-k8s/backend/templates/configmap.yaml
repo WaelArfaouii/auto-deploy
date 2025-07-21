@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config-{{DEPLOY_NAME}}
+  namespace: qa-backend
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://scheme-management-qa-rds.chqku6ou6f3a.eu-west-2.rds.amazonaws.com:5432/{{DEPLOY_NAME}}-db"
+  SPRING_DATASOURCE_USERNAME: "userqa"
+  SERVER_PORT: "8080"
+  COGNITO_USER_POOL_ID: "{{COGNITO_USER_POOL_ID}}"
+  COGNITO_CLIENT_ID: "{{COGNITO_CLIENT_ID}}"
+  COGNITO_REGION: "{{COGNITO_REGION}}"
+  COGNITO_ISSUER_URI: "{{COGNITO_ISSUER_URI}}"
+  LOGGING_LEVEL_LIQUIBASE: "DEBUG"
+  SPRING_LIQUIBASE_ENABLED: "true"
+  SPRINGDOC_SERVER_URL: "https://api-{{DEPLOY_NAME}}.talansm.com/api/v1"

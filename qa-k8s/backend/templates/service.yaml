@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-{{DEPLOY_NAME}}
+  namespace: qa-backend
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-path: /api/v1/swagger-ui/index.html
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-{{DEPLOY_NAME}}
+  ports:
+    - port: 80
+      targetPort: 8080

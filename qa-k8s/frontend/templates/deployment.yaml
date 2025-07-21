@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-{{DEPLOY_NAME}}
+  namespace: qa-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-{{DEPLOY_NAME}}
+  template:
+    metadata:
+      labels:
+        app: frontend-{{DEPLOY_NAME}}
+    spec:
+      containers:
+        - name: frontend
+          image: 619403130511.dkr.ecr.eu-west-2.amazonaws.com/scheme-management-frontend-qa:{{IMAGE_TAG}}
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          envFrom:
+            - configMapRef:
+                name: frontend-env-{{DEPLOY_NAME}}
