@@ -80,17 +80,16 @@ for deploy_name in "${!CONFIG_NAMES[@]}"; do
   echo ""
 done
 
-echo "🔧 Updating ALB listener default target group..."
-aws elbv2 modify-listener \
-    --listener-arn arn:aws:elasticloadbalancing:eu-west-2:619403130511:listener/app/qa-backend-alb/694e596982a6402d/b2d88824ec73e324 \
-    --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:eu-west-2:619403130511:targetgroup/k8s-qabacken-backendn-72a359fb81/bf1db6f7148e4203
-echo "✅ ALB listener updated."
-
 echo "🌍 Running final Terraform apply..."
 cd "$(dirname "$0")/../"
 terraform init -input=false
 terraform apply -auto-approve -var-file=integration.tfvars
 echo "✅ Terraform provisioning complete."
 
+echo "🔧 Updating ALB listener default target group..."
+aws elbv2 modify-listener \
+    --listener-arn arn:aws:elasticloadbalancing:eu-west-2:619403130511:listener/app/qa-backend-alb/694e596982a6402d/b2d88824ec73e324 \
+    --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:eu-west-2:619403130511:targetgroup/k8s-qabacken-backendn-72a359fb81/bf1db6f7148e4203
+echo "✅ ALB listener updated."
 
 

@@ -14,4 +14,4 @@ data:
   S3_BUCKET_NAME: "{{S3_BUCKET_NAME}}"
   LOGGING_LEVEL_LIQUIBASE: "DEBUG"
   SPRING_LIQUIBASE_ENABLED: "true"
-  SPRINGDOC_SERVER_URL: "https://api-{{DEPLOY_NAME}}.talansm.com/api/v1"
+  SPRINGDOC_SERVER_URL: "https://{{DEPLOY_NAME}}-api.talansm.com/api/v1"
