@@ -79,6 +79,7 @@ for deploy_name in "${!CONFIG_NAMES[@]}"; do
 
   echo ""
 done
+
 echo "🔧 Updating ALB listener default target group..."
 aws elbv2 modify-listener \
     --listener-arn arn:aws:elasticloadbalancing:eu-west-2:619403130511:listener/app/qa-backend-alb/694e596982a6402d/b2d88824ec73e324 \

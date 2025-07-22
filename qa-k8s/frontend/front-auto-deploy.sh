@@ -107,13 +107,7 @@ create_cognito_resources() {
   aws cognito-idp admin-create-user \
     --user-pool-id "$USER_POOL_ID" \
     --username "wael.arfaoui@talan.com" \
-    --user-attributes Name=email,Value="wael.arfaoui@talan.com" Name=email_verified,Value=true Name=custom:role,Value=SCHEME_ADMIN \
-    --message-action SUPPRESS
-
-  echo "✉️ Sending temporary password email..."
-  aws cognito-idp admin-reset-user-password \
-    --user-pool-id "$USER_POOL_ID" \
-    --username "wael.arfaoui@talan.com"
+    --user-attributes Name=email,Value="wael.arfaoui@talan.com" Name=email_verified,Value=true Name=custom:role,Value=SCHEME_ADMIN
 
   cat > "$CONFIG_PATH" <<EOF
 {
