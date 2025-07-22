@@ -64,18 +64,18 @@ create_cognito_resources() {
     --user-pool-id "$USER_POOL_ID" \
     --query 'UserPool.Arn' --output text)
 
-  # 2️⃣ Grant permission to Lambda AFTER pool exists
-  aws lambda add-permission --function-name LambdaTrigger \
-    --statement-id "AllowCognitoInvoke-${DEPLOY_NAME}" \
-    --action lambda:InvokeFunction \
-    --principal cognito-idp.amazonaws.com \
-    --source-arn "$USER_POOL_ARN" \
-    --region eu-west-2 || true
-
-  # 3️⃣ Update user pool to attach Lambda trigger
-  aws cognito-idp update-user-pool \
-    --user-pool-id "$USER_POOL_ID" \
-    --lambda-config PreTokenGeneration="$LAMBDA_ARN"
+#  # 2️⃣ Grant permission to Lambda AFTER pool exists
+#  aws lambda add-permission --function-name LambdaTrigger \
+#    --statement-id "AllowCognitoInvoke-${DEPLOY_NAME}" \
+#    --action lambda:InvokeFunction \
+#    --principal cognito-idp.amazonaws.com \
+#    --source-arn "$USER_POOL_ARN" \
+#    --region eu-west-2 || true
+#
+#  # 3️⃣ Update user pool to attach Lambda trigger
+#  aws cognito-idp update-user-pool \
+#    --user-pool-id "$USER_POOL_ID" \
+#    --lambda-config PreTokenGeneration="$LAMBDA_ARN"
 
   # 4️⃣ Create domain
   aws cognito-idp create-user-pool-domain \
@@ -241,6 +241,7 @@ if [ "$ACTION" == "deploy" ]; then
 
   DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
   mkdir -p "$DEPLOY_DIR"
+  S3_BUCKET="scheme-management-${DEPLOY_NAME//_/}"
   BLACK_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/BLACK_LOGO.png"
   WHITE_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/WHITE_LOGO.png"
   COOKIES_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/cookies.pdf"
