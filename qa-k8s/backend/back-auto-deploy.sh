@@ -60,25 +60,10 @@ fi
 
 DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
 DB_NAME="${DEPLOY_NAME}-db"
-
-BASTION_HOST="ec2-user@ec2-3-8-146-104.eu-west-2.compute.amazonaws.com"
 RDS_HOST="scheme-management-qa-rds.chqku6ou6f3a.eu-west-2.rds.amazonaws.com"
 DB_USER="userqa"
-
 : "${DB_PASSWORD:?DB_PASSWORD must be set}"
 
-# === SSH Key Path ===
-BASTION_KEY_PATH="$HOME/Desktop/bastion-qa.pem"
-
-if [[ ! -f "$BASTION_KEY_PATH" ]]; then
-  echo "❌ SSH key not found at $BASTION_KEY_PATH"
-  exit 1
-fi
-
-sed -i 's/\r$//' "$BASTION_KEY_PATH"
-chmod 600 "$BASTION_KEY_PATH"
-
-# === Helpers ===
 
 create_db_via_bastion() {
   echo "🔐 Creating DB $DB_NAME..."
@@ -94,6 +79,24 @@ drop_db_via_bastion() {
     psql -h "$RDS_HOST" -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS \"$DB_NAME\";"
     echo "✅ Database $DB_NAME force-dropped."
 }
+
+S3_BUCKET_NAME="scheme-management-${DEPLOY_NAME//_/}"
+
+create_private_s3_bucket() {
+    echo "📂 Creating private S3 bucket: $S3_BUCKET_NAME"
+    aws s3api create-bucket --bucket "$S3_BUCKET_NAME" --region eu-west-2 --create-bucket-configuration LocationConstraint=eu-west-2
+    aws s3api put-public-access-block --bucket "$S3_BUCKET_NAME" --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+    aws s3api put-bucket-encryption --bucket "$S3_BUCKET_NAME" --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+    echo "✅ S3 bucket $S3_BUCKET_NAME created and secured."
+}
+
+delete_private_s3_bucket() {
+    echo "🗑 Deleting S3 bucket: $S3_BUCKET_NAME"
+    aws s3 rm "s3://$S3_BUCKET_NAME" --recursive || true
+    aws s3api delete-bucket --bucket "$S3_BUCKET_NAME" --region eu-west-2 || true
+    echo "✅ S3 bucket $S3_BUCKET_NAME deleted."
+}
+
 
 
 
@@ -203,7 +206,7 @@ if [[ "$ACTION" == "deploy" ]]; then
 
   update_api_gateway_deployments_tfvar
   create_db_via_bastion
-
+  create_private_s3_bucket
   mkdir -p "$DEPLOY_DIR"
   cp "$TEMPLATE_DIR"/*.yaml "$DEPLOY_DIR"
 
@@ -216,6 +219,7 @@ if [[ "$ACTION" == "deploy" ]]; then
     sed -i "s|{{COGNITO_CLIENT_ID}}|$CLIENT_ID|g" "$file"
     sed -i "s|{{COGNITO_REGION}}|$COGNITO_REGION|g" "$file"
     sed -i "s|{{COGNITO_ISSUER_URI}}|$COGNITO_ISSUER|g" "$file"
+    sed -i "s|{{S3_BUCKET_NAME}}|$S3_BUCKET_NAME|g" "$file"
   done
 
   kubectl apply -f "$DEPLOY_DIR"
@@ -229,7 +233,7 @@ elif [[ "$ACTION" == "delete" ]]; then
 
   remove_api_gateway_deployments_entry
   drop_db_via_bastion
-
+  delete_private_s3_bucket
   if [ -d "$DEPLOY_DIR" ]; then
     kubectl delete -f "$DEPLOY_DIR" --ignore-not-found || true
     rm -rf "$DEPLOY_DIR"

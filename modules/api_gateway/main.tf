@@ -214,7 +214,10 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.proxy,
     aws_api_gateway_integration.proxy_options_integration,
     aws_api_gateway_integration.swagger_ui_index_get,
-    aws_api_gateway_integration.swagger_ui_proxy_any
+    aws_api_gateway_integration.swagger_ui_proxy_any,
+    aws_api_gateway_integration.swagger_json_get,
+    aws_api_gateway_integration.api_docs_proxy_any,
+    aws_api_gateway_integration.api_docs_get,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -224,21 +227,30 @@ resource "aws_api_gateway_deployment" "main" {
       resources = [
         aws_api_gateway_resource.proxy.id,
         aws_api_gateway_resource.swagger_ui_index.id,
-        aws_api_gateway_resource.swagger_ui_proxy.id
+        aws_api_gateway_resource.swagger_ui_proxy.id,
+        aws_api_gateway_resource.swagger_json.id,
+        aws_api_gateway_resource.api_docs.id,
+        aws_api_gateway_resource.api_docs_proxy.id,
       ],
       methods = [
         aws_api_gateway_method.root_any.http_method,
         aws_api_gateway_method.proxy.http_method,
         aws_api_gateway_method.proxy_options.http_method,
         aws_api_gateway_method.swagger_ui_index_get.http_method,
-        aws_api_gateway_method.swagger_ui_proxy_any.http_method
+        aws_api_gateway_method.swagger_ui_proxy_any.http_method,
+        aws_api_gateway_method.swagger_json_get.http_method,
+        aws_api_gateway_method.api_docs_proxy_any.http_method,
+        aws_api_gateway_method.api_docs_get.http_method,
       ],
       integrations = [
         aws_api_gateway_integration.root_integration.id,
         aws_api_gateway_integration.proxy.id,
         aws_api_gateway_integration.proxy_options_integration.id,
         aws_api_gateway_integration.swagger_ui_index_get.id,
-        aws_api_gateway_integration.swagger_ui_proxy_any.id
+        aws_api_gateway_integration.swagger_ui_proxy_any.id,
+        aws_api_gateway_integration.swagger_json_get.id,
+        aws_api_gateway_integration.api_docs_proxy_any.id,
+        aws_api_gateway_integration.api_docs_get.id,
       ]
     }))
   }
@@ -291,4 +303,61 @@ resource "aws_api_gateway_integration" "swagger_json_get" {
   connection_type         = "VPC_LINK"
   connection_id           = var.vpc_link_id
 }
+
+resource "aws_api_gateway_resource" "api_docs" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.v1.id
+  path_part   = "api-docs"
+}
+
+resource "aws_api_gateway_resource" "api_docs_proxy" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.api_docs.id
+  path_part   = "{proxy+}"
+}
+
+resource "aws_api_gateway_method" "api_docs_proxy_any" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.api_docs_proxy.id
+  http_method   = "ANY"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.path.proxy" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "api_docs_proxy_any" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.api_docs_proxy.id
+  http_method             = aws_api_gateway_method.api_docs_proxy_any.http_method
+  integration_http_method = "ANY"
+  type                    = "HTTP_PROXY"
+  uri                     = "http://scheme-management-qa-back-nlb-7b0c87d3b157aa32.elb.eu-west-2.amazonaws.com/api/v1/api-docs/{proxy}"
+  connection_type         = "VPC_LINK"
+  connection_id           = var.vpc_link_id
+
+  request_parameters = {
+    "integration.request.path.proxy" = "method.request.path.proxy"
+  }
+}
+
+resource "aws_api_gateway_method" "api_docs_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.api_docs.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "api_docs_get" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.api_docs.id
+  http_method             = aws_api_gateway_method.api_docs_get.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri                     = "http://scheme-management-qa-back-nlb-7b0c87d3b157aa32.elb.eu-west-2.amazonaws.com/api/v1/api-docs"
+  connection_type         = "VPC_LINK"
+  connection_id           = var.vpc_link_id
+}
+
 

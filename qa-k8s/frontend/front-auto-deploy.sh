@@ -51,12 +51,14 @@ create_cognito_resources() {
   CLIENT_NAME="frontend-client-$DEPLOY_NAME"
   DOMAIN_PREFIX="frontend-$DEPLOY_NAME"
   CONFIG_PATH="${COGNITO_CONFIG_DIR}/${DEPLOY_NAME}.json"
-  PRE_TOKEN_LAMBDA_ARN="arn:aws:lambda:eu-west-2:619403130511:function:LambdaTrigger"
+
   USER_POOL_ID=$(aws cognito-idp create-user-pool \
     --pool-name "$POOL_NAME" \
     --schema Name=role,AttributeDataType=String,Mutable=true,Required=false \
     --admin-create-user-config AllowAdminCreateUserOnly=true \
+    --lambda-config PreTokenGeneration="arn:aws:lambda:eu-west-2:619403130511:function:LambdaTrigger" \
     --query 'UserPool.Id' --output text)
+
 
   USER_POOL_ARN=$(aws cognito-idp describe-user-pool \
     --user-pool-id "$USER_POOL_ID" \
@@ -68,7 +70,6 @@ create_cognito_resources() {
 
   LOGO_FILE="${LOGO_DIR}/${DEPLOY_NAME}.png"
   CSS_FILE="$SCRIPT_DIR/cognito-style/style.css"
-  CSS_CONTENT=$(<"$CSS_FILE")
   if aws s3 cp "s3://scheme-management-qa-deployments/${DEPLOY_NAME}.png" "$LOGO_FILE"; then
     echo "✅ Logo downloaded: $LOGO_FILE"
     WIN_LOGO_FILE=$(cygpath -w "$LOGO_FILE" 2>/dev/null || echo "$LOGO_FILE")
@@ -100,6 +101,19 @@ create_cognito_resources() {
     --allowed-o-auth-flows-user-pool-client \
     --explicit-auth-flows "ALLOW_USER_SRP_AUTH" "ALLOW_REFRESH_TOKEN_AUTH" \
     --query 'UserPoolClient.ClientId' --output text)
+
+ # === New user creation with custom role ===
+  echo "👤 Creating user wael.arfaoui@talan.com with role SCHEME_ADMIN..."
+  aws cognito-idp admin-create-user \
+    --user-pool-id "$USER_POOL_ID" \
+    --username "wael.arfaoui@talan.com" \
+    --user-attributes Name=email,Value="wael.arfaoui@talan.com" Name=email_verified,Value=true Name=custom:role,Value=SCHEME_ADMIN \
+    --message-action SUPPRESS
+
+  echo "✉️ Sending temporary password email..."
+  aws cognito-idp admin-reset-user-password \
+    --user-pool-id "$USER_POOL_ID" \
+    --username "wael.arfaoui@talan.com"
 
   cat > "$CONFIG_PATH" <<EOF
 {
@@ -219,6 +233,10 @@ if [ "$ACTION" == "deploy" ]; then
 
   DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
   mkdir -p "$DEPLOY_DIR"
+  BLACK_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/BLACK_LOGO.png"
+  WHITE_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/WHITE_LOGO.png"
+  COOKIES_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/cookies.pdf"
+  SCHEME_NAME="${DEPLOY_NAME}"
 
   # Copy all template YAMLs EXCEPT configmap.yaml
   for file in "$TEMPLATE_DIR"/*.yaml; do
@@ -235,6 +253,10 @@ if [ "$ACTION" == "deploy" ]; then
       -e "s|{{VITE_COGNITO_REDIRECT_URI}}|$COGNITO_REDIRECT_URI|g" \
       -e "s|{{VITE_COGNITO_REGION}}|$COGNITO_REGION|g" \
       -e "s|{{VITE_COGNITO_USER_POOL_ID}}|$COGNITO_USER_POOL_ID|g" \
+      -e "s|{{VITE_BLACK_LOGO_URL}}|$BLACK_LOGO_URL|g" \
+      -e "s|{{VITE_WHITE_LOGO_URL}}|$WHITE_LOGO_URL|g" \
+      -e "s|{{VITE_SCHEME_NAME}}|$SCHEME_NAME|g" \
+      -e "s|{{VITE_COOCKIES_FILE_URL}}|$COOKIES_URL|g" \
       "$TEMPLATE_DIR/configmap.yaml" > "$DEPLOY_DIR/configmap.yaml"
 
  # Now also replace placeholders in other YAML files in $DEPLOY_DIR
@@ -271,15 +293,22 @@ EOF
 
 # 🗑️ DELETE
 elif [ "$ACTION" == "delete" ]; then
-  echo "🗑️ Deleting deployment for $DEPLOY_NAME..."
-  DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
-  kubectl delete -f "$DEPLOY_DIR" --ignore-not-found
-  clean_ingress_rule
-  remove_subdomain_from_tfvars
-  delete_cognito_resources
+    echo "🗑️ Deleting deployment for $DEPLOY_NAME..."
+    DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
+    kubectl delete -f "$DEPLOY_DIR" --ignore-not-found
+    clean_ingress_rule
+    remove_subdomain_from_tfvars
+    delete_cognito_resources
 
-  rm -rf "$DEPLOY_DIR"
-  echo "✅ Deletion '$DEPLOY_NAME' complete."
+    # Delete downloaded logo
+    LOGO_FILE="${LOGO_DIR}/${DEPLOY_NAME}.png"
+    if [ -f "$LOGO_FILE" ]; then
+      rm -f "$LOGO_FILE"
+      echo "🗑️ Deleted logo file $LOGO_FILE"
+    fi
+
+    rm -rf "$DEPLOY_DIR"
+    echo "✅ Deletion '$DEPLOY_NAME' complete."
 
 else
   echo "❌ Unknown action: $ACTION"
