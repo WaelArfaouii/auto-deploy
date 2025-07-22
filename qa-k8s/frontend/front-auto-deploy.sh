@@ -233,9 +233,9 @@ if [ "$ACTION" == "deploy" ]; then
 
   DEPLOY_DIR="$DEPLOYMENTS_DIR/$DEPLOY_NAME"
   mkdir -p "$DEPLOY_DIR"
-  BLACK_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/BLACK_LOGO.png"
-  WHITE_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/WHITE_LOGO.png"
-  COOKIES_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/${DEPLOY_NAME}/cookies.pdf"
+  BLACK_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/BLACK_LOGO.png"
+  WHITE_LOGO_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/WHITE_LOGO.png"
+  COOKIES_URL="https://${S3_BUCKET}.s3.${COGNITO_REGION}.amazonaws.com/cookies.pdf"
   SCHEME_NAME="${DEPLOY_NAME}"
 
   # Copy all template YAMLs EXCEPT configmap.yaml
