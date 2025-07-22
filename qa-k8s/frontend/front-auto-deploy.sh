@@ -41,7 +41,7 @@ else
   DEPLOY_NAME=$(jq -r '.deploy_name' "$CONFIG_PATH")
 fi
 
-IMAGE_TAG="5807ed1c"
+IMAGE_TAG="46454ec6"
 
 
 create_cognito_resources() {
@@ -51,19 +51,33 @@ create_cognito_resources() {
   CLIENT_NAME="frontend-client-$DEPLOY_NAME"
   DOMAIN_PREFIX="frontend-$DEPLOY_NAME"
   CONFIG_PATH="${COGNITO_CONFIG_DIR}/${DEPLOY_NAME}.json"
+  LAMBDA_ARN="arn:aws:lambda:eu-west-2:619403130511:function:LambdaTrigger"
 
+  # 1️⃣ Create the user pool without Lambda trigger
   USER_POOL_ID=$(aws cognito-idp create-user-pool \
     --pool-name "$POOL_NAME" \
     --schema Name=role,AttributeDataType=String,Mutable=true,Required=false \
     --admin-create-user-config AllowAdminCreateUserOnly=true \
-    --lambda-config PreTokenGeneration="arn:aws:lambda:eu-west-2:619403130511:function:LambdaTrigger" \
     --query 'UserPool.Id' --output text)
-
 
   USER_POOL_ARN=$(aws cognito-idp describe-user-pool \
     --user-pool-id "$USER_POOL_ID" \
     --query 'UserPool.Arn' --output text)
 
+  # 2️⃣ Grant permission to Lambda AFTER pool exists
+  aws lambda add-permission --function-name LambdaTrigger \
+    --statement-id "AllowCognitoInvoke-${DEPLOY_NAME}" \
+    --action lambda:InvokeFunction \
+    --principal cognito-idp.amazonaws.com \
+    --source-arn "$USER_POOL_ARN" \
+    --region eu-west-2 || true
+
+  # 3️⃣ Update user pool to attach Lambda trigger
+  aws cognito-idp update-user-pool \
+    --user-pool-id "$USER_POOL_ID" \
+    --lambda-config PreTokenGeneration="$LAMBDA_ARN"
+
+  # 4️⃣ Create domain
   aws cognito-idp create-user-pool-domain \
     --domain "$DOMAIN_PREFIX" \
     --user-pool-id "$USER_POOL_ID"

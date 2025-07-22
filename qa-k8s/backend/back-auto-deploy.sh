@@ -41,7 +41,7 @@ fi
 
 # Load Variables
 DEPLOY_NAME=$(jq -r '.deploy_name' "$CONFIG_PATH" 2>/dev/null || echo "${CONFIG_FILE%.json}")
-IMAGE_TAG="dbfb6589"
+IMAGE_TAG="729f9e54"
 
 if [[ "$ACTION" == "deploy" ]]; then
   USER_POOL_ID=$(jq -r '.cognito_user_pool_id' "$COGNITO_CONFIG")
