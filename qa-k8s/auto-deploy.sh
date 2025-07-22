@@ -9,6 +9,7 @@ BACK_SCRIPT="$(dirname "$0")/backend/back-auto-deploy.sh"
 mkdir -p "$CONFIG_DIR"
 
 echo "📋 Saving current local config list..."
+# Save list of existing deployment folders
 OLD_CONFIGS=()
 for dir in "$CONFIG_DIR"/*/; do
   [ -d "$dir" ] && OLD_CONFIGS+=("$(basename "$dir")")
@@ -18,6 +19,7 @@ echo "📥 Syncing configs from s3://$S3_BUCKET"
 aws s3 sync "s3://$S3_BUCKET" "$CONFIG_DIR" --delete
 
 echo "📋 Saving new config list..."
+# Save list AFTER sync
 NEW_CONFIGS=()
 for dir in "$CONFIG_DIR"/*/; do
   [ -d "$dir" ] && NEW_CONFIGS+=("$(basename "$dir")")
@@ -35,12 +37,13 @@ for old_deploy_name in "${OLD_CONFIGS[@]}"; do
 
   if ! $found; then
     echo "🗑 Config $old_deploy_name was removed from S3 — cleaning up deployment..."
+    RELATIVE_PATH="$old_deploy_name/$old_deploy_name.json"
 
     echo "➡️ Deleting frontend-$old_deploy_name"
-    bash "$FRONT_SCRIPT" delete "$old_deploy_name/$old_deploy_name.json" || echo "⚠️ Failed frontend delete"
+    bash "$FRONT_SCRIPT" delete "$RELATIVE_PATH" || echo "⚠️ Failed frontend delete"
 
     echo "➡️ Deleting backend-$old_deploy_name"
-    bash "$BACK_SCRIPT" delete "$old_deploy_name/$old_deploy_name.json" || echo "⚠️ Failed backend delete"
+    bash "$BACK_SCRIPT" delete "$RELATIVE_PATH" || echo "⚠️ Failed backend delete"
 
     echo "🧹 Removing local config folder: $old_deploy_name"
     rm -rf "$CONFIG_DIR/$old_deploy_name"
@@ -65,15 +68,17 @@ for deploy_name in "${!CONFIG_NAMES[@]}"; do
   BACKEND_EXISTS=$(kubectl get deployment "$BACKEND_DEPLOYMENT" -n qa-backend --ignore-not-found)
   FRONTEND_EXISTS=$(kubectl get deployment "$FRONTEND_DEPLOYMENT" -n qa-frontend --ignore-not-found)
 
+  CONFIG_FILE_PATH="$CONFIG_DIR/$deploy_name/$deploy_name.json"
+  RELATIVE_PATH="${CONFIG_FILE_PATH#$CONFIG_DIR/}"
+
   if [[ -z "$BACKEND_EXISTS" || -z "$FRONTEND_EXISTS" ]]; then
     echo "🚀 Deploying $deploy_name..."
-    bash "$FRONT_SCRIPT" deploy "$deploy_name/$deploy_name.json"
-    bash "$BACK_SCRIPT" deploy "$deploy_name/$deploy_name.json"
+    bash "$FRONT_SCRIPT" deploy "$RELATIVE_PATH"
+    bash "$BACK_SCRIPT" deploy "$RELATIVE_PATH"
     echo "✅ Deployed $deploy_name"
   else
     echo "✅ $deploy_name already deployed. Skipping."
   fi
-
   echo ""
 done
 
