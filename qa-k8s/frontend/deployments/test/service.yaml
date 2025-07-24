@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-test
+  namespace: qa-frontend
+spec:
+  selector:
+    app: frontend-test
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP

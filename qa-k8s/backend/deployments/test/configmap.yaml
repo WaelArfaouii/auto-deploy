@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config-test
+  namespace: qa-backend
+data:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://scheme-management-qa-rds.chqku6ou6f3a.eu-west-2.rds.amazonaws.com:5432/test-db"
+  SPRING_DATASOURCE_USERNAME: "userqa"
+  SERVER_PORT: "8080"
+  COGNITO_USER_POOL_ID: "eu-west-2_hrSLrmkzn"
+  COGNITO_CLIENT_ID: "75j94homdq85oohnm3jrttnjc7"
+  COGNITO_REGION: "eu-west-2"
+  COGNITO_ISSUER_URI: "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_hrSLrmkzn"
+  S3_BUCKET_NAME: "scheme-management-test"
+  LOGGING_LEVEL_LIQUIBASE: "DEBUG"
+  SPRING_LIQUIBASE_ENABLED: "true"
+  SPRINGDOC_SERVER_URL: "https://test-api.talansm.com/api/v1"

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-env-test
+  namespace: qa-frontend
+data:
+  VITE_API_BASE_URL: "https://test-api.talansm.com/api/v1"
+  VITE_COGNITO_CLIENT_ID: "75j94homdq85oohnm3jrttnjc7"
+  VITE_COGNITO_HOSTED_UI_URL: "https://frontend-test.auth.eu-west-2.amazoncognito.com"
+  VITE_COGNITO_REDIRECT_URI: "https://test.talansm.com/callback"
+  VITE_COGNITO_REGION: "eu-west-2"
+  VITE_COGNITO_USER_POOL_ID: "eu-west-2_hrSLrmkzn"
+  VITE_SESSION_INACTIVITY_TIMEOUT_MINUTES: "120"
+  VITE_SESSION_WARNING_TIME_MINUTES: "5"
+  VITE_BLACK_LOGO_URL: "https://scheme-management-qa-deployments.s3.eu-west-2.amazonaws.com/BLACK_LOGO.png"
+  VITE_WHITE_LOGO_URL: "https://scheme-management-qa-deployments.s3.eu-west-2.amazonaws.com/WHITE_LOGO.png"
+  VITE_SCHEME_NAME: "test"
+  VITE_COOCKIES_FILE_URL: "https://scheme-management-qa-deployments.s3.eu-west-2.amazonaws.com/cookies.pdf"

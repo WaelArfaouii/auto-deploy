@@ -8,6 +8,11 @@ hosted_zone_count      = 0
 frontend_alb_domain = "qa-frontend-alb-1105327965.eu-west-2.elb.amazonaws.com"
 frontend_alb_zone_id = "ZHURV8PSTC4K8"
 api_gateway_deployments = {
+  test = {
+    deployment_name = "test"
+    cognito_user_pool_arn = "arn:aws:cognito-idp:eu-west-2:619403130511:userpool/eu-west-2_hrSLrmkzn"
+  }
 }
 frontend_subdomains = {
+  test = true
 }

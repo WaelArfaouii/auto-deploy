@@ -13,6 +13,16 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
+    - host: test.talansm.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-test
+                port:
+                  number: 80
     - host: portal-qa.talansm.com
       http:
         paths:

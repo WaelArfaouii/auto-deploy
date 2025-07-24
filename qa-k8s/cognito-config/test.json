@@ -1,0 +1,7 @@
+{
+  "cognito_user_pool_id": "eu-west-2_hrSLrmkzn",
+  "cognito_client_id": "75j94homdq85oohnm3jrttnjc7",
+  "cognito_region": "eu-west-2",
+  "cognito_issuer_uri": "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_hrSLrmkzn",
+  "cognito_user_pool_arn": "arn:aws:cognito-idp:eu-west-2:619403130511:userpool/eu-west-2_hrSLrmkzn"
+}
